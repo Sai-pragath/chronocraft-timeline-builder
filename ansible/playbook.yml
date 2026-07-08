@@ -66,7 +66,7 @@
     # 3. Install Jenkins
     - name: Install Java (required for Jenkins)
       apt:
-        name: openjdk-17-jre-headless
+        name: openjdk-21-jre-headless
         state: present
 
     - name: Add Jenkins GPG key
