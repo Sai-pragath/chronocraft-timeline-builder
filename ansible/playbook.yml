@@ -82,9 +82,15 @@
         dest: /etc/apt/keyrings/jenkins.asc
         mode: '0644'
 
+    - name: Remove old Jenkins repository (cleanup from previous failure)
+      apt_repository:
+        repo: deb https://pkg.jenkins.io/debian-stable binary/
+        state: absent
+
     - name: Add Jenkins Repository
       apt_repository:
         repo: "deb [signed-by=/etc/apt/keyrings/jenkins.asc] https://pkg.jenkins.io/debian-stable binary/"
+        filename: jenkins
         state: present
 
     - name: Install Jenkins
