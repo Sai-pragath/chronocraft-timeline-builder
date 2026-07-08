@@ -18,14 +18,21 @@
           - software-properties-common
         state: present
 
-    - name: Add Docker GPG apt Key
-      apt_key:
+    - name: Create keyrings directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Docker GPG key
+      get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
 
     - name: Add Docker Repository
       apt_repository:
-        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
 
     - name: Install Docker CE
@@ -69,14 +76,15 @@
         name: openjdk-21-jre-headless
         state: present
 
-    - name: Add Jenkins GPG key
-      apt_key:
+    - name: Download Jenkins GPG key
+      get_url:
         url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
-        state: present
+        dest: /etc/apt/keyrings/jenkins.asc
+        mode: '0644'
 
     - name: Add Jenkins Repository
       apt_repository:
-        repo: deb https://pkg.jenkins.io/debian-stable binary/
+        repo: "deb [signed-by=/etc/apt/keyrings/jenkins.asc] https://pkg.jenkins.io/debian-stable binary/"
         state: present
 
     - name: Install Jenkins
