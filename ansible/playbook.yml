@@ -78,14 +78,14 @@
 
     - name: Download Jenkins GPG key
       get_url:
-        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
         dest: /etc/apt/keyrings/jenkins.asc
         mode: '0644'
 
     - name: Remove old Jenkins repository (cleanup from previous failure)
-      apt_repository:
-        repo: deb https://pkg.jenkins.io/debian-stable binary/
-        state: absent
+      shell: rm -f /etc/apt/sources.list.d/*jenkins* /etc/apt/sources.list.d/archive_uri-https_pkg_jenkins_io*
+      args:
+        warn: false
 
     - name: Add Jenkins Repository
       apt_repository:
