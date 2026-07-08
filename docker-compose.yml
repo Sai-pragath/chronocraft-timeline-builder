@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: chronocraft-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: your_db_password_here
+      MYSQL_DATABASE: timeline_builder
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build: ./backend
+    container_name: chronocraft-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:your_db_password_here@mysql:3306/timeline_builder
+      - SECRET_KEY=your_super_secret_jwt_key
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+    depends_on:
+      - mysql
+
+  frontend:
+    build: ./frontend
+    container_name: chronocraft-frontend
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

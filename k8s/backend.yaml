@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-secret
+  labels:
+    app: chronocraft
+type: Opaque
+stringData:
+  # NOTE: Replace these placeholder values in production!
+  DATABASE_URL: "mysql+pymysql://root:your_db_password_here@mysql:3306/timeline_builder"
+  SECRET_KEY: "your_super_secret_jwt_key"
+  ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chronocraft-backend
+  labels:
+    app: chronocraft
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chronocraft
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: chronocraft
+        tier: backend
+    spec:
+      containers:
+      - name: backend
+        # Note: Replace with your actual registry in Jenkinsfile (e.g. your-dockerhub-user/chronocraft-backend:latest)
+        image: chronocraft-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - secretRef:
+            name: backend-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chronocraft-backend
+  labels:
+    app: chronocraft
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: chronocraft
+    tier: backend
