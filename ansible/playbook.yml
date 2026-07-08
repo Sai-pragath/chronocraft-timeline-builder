@@ -84,8 +84,6 @@
 
     - name: Remove old Jenkins repository (cleanup from previous failure)
       shell: rm -f /etc/apt/sources.list.d/*jenkins* /etc/apt/sources.list.d/archive_uri-https_pkg_jenkins_io*
-      args:
-        warn: false
 
     - name: Add Jenkins Repository
       apt_repository:
