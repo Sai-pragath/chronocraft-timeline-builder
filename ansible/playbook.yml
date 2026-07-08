@@ -78,7 +78,7 @@
 
     - name: Download Jenkins GPG key
       get_url:
-        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
         dest: /etc/apt/keyrings/jenkins.asc
         mode: '0644'
 
