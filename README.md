@@ -65,11 +65,12 @@ npm run dev
 
 This project includes a complete Infrastructure-as-Code (IaC) and CI/CD setup for deploying to an AWS EC2 instance.
 
-### 1. Server Provisioning (Ansible)
-We use Ansible to prepare a raw Ubuntu EC2 server.
-1. Navigate to the `ansible/` directory.
-2. Edit `inventory.ini` and replace `<YOUR-EC2-PUBLIC-IP>` with your actual server IP.
-3. Run the playbook to install Docker, Kubernetes (K3s), and Jenkins:
+### 1. Server Provisioning (Ansible 3-Server Architecture)
+We use Ansible to prepare three separate Ubuntu EC2 servers for a scalable, distributed architecture.
+1. Provision 3 Ubuntu EC2 instances on AWS (e.g., `t3.medium`).
+2. Navigate to the `ansible/` directory.
+3. Edit `inventory.ini` and replace `<JENKINS-IP>`, `<MASTER-IP>`, and `<WORKER-IP>` with the respective public IPs of your servers.
+4. Run the playbook to automatically configure the Jenkins Node, K3s Master, and link the K3s Worker:
    ```bash
    ansible-playbook -i inventory.ini playbook.yml
    ```
