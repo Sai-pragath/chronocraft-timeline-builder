@@ -145,9 +145,7 @@
   become: yes
   tasks:
     - name: Install K3s Server
-      shell: curl -sfL https://get.k3s.io | sh -
-      args:
-        creates: /usr/local/bin/k3s
+      shell: curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --tls-san {{ inventory_hostname }} --node-external-ip {{ inventory_hostname }}" sh -
 
     - name: Wait for K3s node to be ready
       command: k3s kubectl get node
