@@ -2,106 +2,149 @@
 - name: Provision EC2 Server with Docker, K3s, and Jenkins
   hosts: ec2_servers
   become: yes
+
+  vars:
+    docker_keyring: /etc/apt/keyrings/docker.asc
+    jenkins_keyring: /etc/apt/keyrings/jenkins.gpg
+
   tasks:
+
+    ####################################################################
+    # Update APT
+    ####################################################################
+
     - name: Update apt cache
       apt:
         update_cache: yes
         cache_valid_time: 3600
 
-    # 1. Install Docker
-    - name: Install dependencies for Docker
+    ####################################################################
+    # Install Common Packages
+    ####################################################################
+
+    - name: Install required packages
       apt:
         name:
           - apt-transport-https
           - ca-certificates
           - curl
           - software-properties-common
+          - gnupg
         state: present
 
     - name: Create keyrings directory
       file:
         path: /etc/apt/keyrings
         state: directory
-        mode: '0755'
+        mode: "0755"
+
+    ####################################################################
+    # Install Docker
+    ####################################################################
 
     - name: Download Docker GPG key
       get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
-        dest: /etc/apt/keyrings/docker.asc
-        mode: '0644'
+        dest: "{{ docker_keyring }}"
+        mode: "0644"
 
     - name: Add Docker Repository
       apt_repository:
-        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        repo: "deb [arch=amd64 signed-by={{ docker_keyring }}] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        filename: docker
         state: present
+        update_cache: yes
 
-    - name: Install Docker CE
+    - name: Install Docker
       apt:
-        name: docker-ce
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
         state: present
 
-    - name: Ensure Docker service is running
+    - name: Enable Docker
       systemd:
         name: docker
-        state: started
         enabled: yes
+        state: started
 
-    - name: Add standard user to docker group
+    - name: Add ubuntu user to docker group
       user:
         name: ubuntu
         groups: docker
         append: yes
 
-    # 2. Install K3s (Lightweight Kubernetes)
+    ####################################################################
+    # Install K3s
+    ####################################################################
+
     - name: Install K3s
-      shell: curl -sfL https://get.k3s.io | sh -
+      shell: |
+        curl -sfL https://get.k3s.io | sh -
       args:
         creates: /usr/local/bin/k3s
 
-    - name: Wait for K3s node to be ready
-      command: k3s kubectl get node
+    - name: Wait until K3s is ready
+      command: k3s kubectl get nodes
       register: k3s_status
-      until: k3s_status.rc == 0
-      retries: 5
+      retries: 10
       delay: 10
+      until: k3s_status.rc == 0
+      changed_when: false
 
-    - name: Change permissions on K3s kubeconfig for standard user
+    - name: Set kubeconfig permissions
       file:
         path: /etc/rancher/k3s/k3s.yaml
-        mode: '0644'
+        mode: "0644"
 
-    # 3. Install Jenkins
-    - name: Install Java (required for Jenkins)
+    ####################################################################
+    # Install Java
+    ####################################################################
+
+    - name: Install Java 21
       apt:
         name: openjdk-21-jre-headless
         state: present
 
-    - name: Download Jenkins GPG key
-      get_url:
-        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
-        dest: /etc/apt/keyrings/jenkins.asc
-        mode: '0644'
+    ####################################################################
+    # Install Jenkins
+    ####################################################################
 
-    - name: Remove old Jenkins repository (cleanup from previous failure)
-      shell: rm -f /etc/apt/sources.list.d/*jenkins* /etc/apt/sources.list.d/archive_uri-https_pkg_jenkins_io*
+    - name: Remove old Jenkins repository
+      file:
+        path: /etc/apt/sources.list.d/jenkins.list
+        state: absent
+
+    - name: Remove old Jenkins key
+      file:
+        path: "{{ jenkins_keyring }}"
+        state: absent
+
+    - name: Download Jenkins GPG key
+      shell: |
+        curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key \
+        | gpg --dearmor -o {{ jenkins_keyring }}
+      args:
+        creates: "{{ jenkins_keyring }}"
 
     - name: Add Jenkins Repository
       apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/jenkins.asc] https://pkg.jenkins.io/debian-stable binary/"
+        repo: "deb [signed-by={{ jenkins_keyring }}] https://pkg.jenkins.io/debian-stable binary/"
         filename: jenkins
         state: present
+        update_cache: yes
 
     - name: Install Jenkins
       apt:
         name: jenkins
         state: present
-        update_cache: yes
 
-    - name: Ensure Jenkins service is running
+    - name: Enable Jenkins
       systemd:
         name: jenkins
-        state: started
         enabled: yes
+        state: started
 
     - name: Add Jenkins user to docker group
       user:
@@ -109,7 +152,34 @@
         groups: docker
         append: yes
 
-    - name: Restart Jenkins to apply docker group
+    - name: Restart Jenkins
       systemd:
         name: jenkins
         state: restarted
+
+    ####################################################################
+    # Verify Installations
+    ####################################################################
+
+    - name: Verify Docker
+      command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Verify K3s
+      command: k3s --version
+      register: k3s_version
+      changed_when: false
+
+    - name: Verify Jenkins
+      command: java -jar /usr/share/java/jenkins.war --version
+      register: jenkins_version
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display Versions
+      debug:
+        msg:
+          - "{{ docker_version.stdout }}"
+          - "{{ k3s_version.stdout }}"
+          - "{{ jenkins_version.stdout | default('Jenkins Installed Successfully') }}"
