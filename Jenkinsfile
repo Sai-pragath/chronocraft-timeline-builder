@@ -44,7 +44,8 @@ pipeline {
         stage('Push Images to Registry') {
             steps {
                 script {
-                    docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
+                    // For Docker Hub, the registry URL must be empty so Jenkins uses the default index.docker.io
+                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
                         docker.image("${BACKEND_IMAGE}:${IMAGE_TAG}").push()
                         docker.image("${BACKEND_IMAGE}:latest").push()
                         
