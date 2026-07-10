@@ -137,6 +137,21 @@
         name: jenkins
         state: restarted
 
+    ####################################################################
+    # Install kubectl (Required for Jenkins Pipeline to deploy to K8s)
+    ####################################################################
+    - name: Install kubectl via snap
+      community.general.snap:
+        name: kubectl
+        classic: yes
+      # Fallback to shell if community.general collection is missing
+      ignore_errors: yes
+      register: snap_install
+
+    - name: Install kubectl via shell (fallback)
+      shell: snap install kubectl --classic
+      when: snap_install.failed
+
 # ==========================================
 # PLAY 2: Provision K3s Master Node
 # ==========================================
