@@ -5,7 +5,8 @@ import TimelineManager from './components/TimelineManager';
 import TimelineView from './components/TimelineView';
 import axios from 'axios';
 
-axios.defaults.baseURL = 'http://localhost:8000';
+// Remove hardcoded localhost so it uses relative paths for the K8s Ingress
+// axios.defaults.baseURL = 'http://localhost:8000';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
