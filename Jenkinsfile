@@ -5,7 +5,7 @@ pipeline {
         // NOTE: These should be configured as Jenkins Credentials, not hardcoded!
         DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
         DOCKER_REGISTRY = 'docker.io'
-        DOCKER_USER = 'your_dockerhub_user' // Replace this
+        DOCKER_USER = 'saipragath' // Replace this
         
         BACKEND_IMAGE = "${DOCKER_USER}/chronocraft-backend"
         FRONTEND_IMAGE = "${DOCKER_USER}/chronocraft-frontend"
