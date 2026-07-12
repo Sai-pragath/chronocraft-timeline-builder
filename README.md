@@ -16,7 +16,7 @@ ChronoCraft is a modern, full-stack web application designed to help users creat
 
 ---
 
-## 🚀 Local Development Setup
+##  Local Development Setup
 
 To run the application locally on your machine, you can either use Docker Compose (Recommended) or run the servers manually.
 
@@ -61,7 +61,7 @@ npm run dev
 
 ---
 
-## 🛠 DevOps & Production Deployment
+##  DevOps & Production Deployment
 
 This project includes a complete Infrastructure-as-Code (IaC) and CI/CD setup for deploying to an AWS EC2 instance.
 
@@ -96,7 +96,7 @@ If you wish to deploy to Kubernetes manually without Jenkins:
 
 ---
 
-## 🔒 Security Notes
+##  Security Notes
 - **Never commit `.env` files** or real passwords to version control.
 - In production, rely on Kubernetes Secrets to inject sensitive data into the pods.
 - The `ansible/playbook.yml` requires SSH access to your target server via a `.pem` key. Do not commit this key.
